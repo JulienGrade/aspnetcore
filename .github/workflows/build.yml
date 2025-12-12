@@ -50,20 +50,23 @@ jobs:
             --add-source "https://api.nuget.org/v3/index.json" `
             --ignore-failed-sources
 
+      - name: Generate ASP.NET Core build files
+        shell: powershell
+        run: |
+          .\build.cmd -noBuildNative -noBuildManaged
+
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          dotnet restore AspNetCore.slnx
-
           ${{ runner.temp }}\scanner\dotnet-sonarscanner begin `
             /k:"JulienGrade_aspnetcore" `
             /o:"juliengrade" `
             /d:sonar.host.url="https://sonarcloud.io" `
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+            /d:sonar.token="$env:SONAR_TOKEN"
 
-          dotnet build AspNetCore.slnx -c Release --no-restore
+          dotnet build AspNetCore.slnx -c Release
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+            /d:sonar.token="$env:SONAR_TOKEN"
