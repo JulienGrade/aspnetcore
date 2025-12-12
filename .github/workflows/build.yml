@@ -55,7 +55,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          dotnet restore AspNetCore.sln
+          dotnet restore AspNetCore.slnx
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner begin `
             /k:"JulienGrade_aspnetcore" `
@@ -63,7 +63,7 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-          dotnet build AspNetCore.sln -c Release --no-restore
+          dotnet build AspNetCore.slnx -c Release --no-restore
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
