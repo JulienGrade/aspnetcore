@@ -55,7 +55,6 @@ jobs:
         run: |
           eng\build.cmd -noBuildNative -noBuildManaged
 
-
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -67,7 +66,8 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.token="$env:SONAR_TOKEN"
 
-          dotnet build AspNetCore.slnx -c Release
+          dotnet restore src\Framework\Framework.slnf
+          dotnet build src\Framework\Framework.slnf -c Release --no-restore
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
             /d:sonar.token="$env:SONAR_TOKEN"
