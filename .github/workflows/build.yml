@@ -60,7 +60,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: pwsh
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin `
+          & "${{ runner.temp }}\scanner\dotnet-sonarscanner" begin `
             /k:"JulienGrade_aspnetcore" `
             /o:"juliengrade" `
             /d:sonar.host.url="https://sonarcloud.io" `
@@ -68,7 +68,7 @@ jobs:
             /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" `
             /d:sonar.coverage.exclusions="**/*Tests/**"
 
-          cmd /c call .\build.cmd -noBuildNative -noBuildNodeJS
+          cmd /c call "$env:GITHUB_WORKSPACE\eng\build.cmd" -noBuildNative -noBuildNodeJS
 
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
+          & "${{ runner.temp }}\scanner\dotnet-sonarscanner" end `
             /d:sonar.token="$env:SONAR_TOKEN"
