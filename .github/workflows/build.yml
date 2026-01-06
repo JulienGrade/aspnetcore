@@ -30,7 +30,7 @@ jobs:
 
       - name: Restore aspnetcore toolchain
         shell: cmd
-        run: call .\eng\restore.cmd
+        run: call .\restore.cmd
 
       - uses: actions/cache@v4
         with:
@@ -68,7 +68,7 @@ jobs:
             /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" `
             /d:sonar.coverage.exclusions="**/*Tests/**"
 
-          cmd /c call .\eng\build.cmd -noBuildNative -noBuildNodeJS
+          cmd /c call .\build.cmd -noBuildNative -noBuildNodeJS
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
             /d:sonar.token="$env:SONAR_TOKEN"
