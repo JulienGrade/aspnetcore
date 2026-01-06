@@ -69,20 +69,40 @@ jobs:
             /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" `
             /d:sonar.coverage.exclusions="**/*Tests/**"
 
-          $solutions = @(
+          $ErrorActionPreference = "Stop"
+
+          $preferred = @(
+            "src\Framework\Framework.slnf",
             "src\Framework\Framework.sln",
-            "src\Servers\Servers.sln",
-            "src\SignalR\SignalR.sln",
-            "src\Security\Security.sln"
+            "src\Servers\Servers.slnf",
+            "src\Servers\Servers.sln"
           )
 
-          foreach ($sln in $solutions) {
-            if (Test-Path $sln) {
-              dotnet restore $sln
-              dotnet build $sln -c Release --no-restore
-            }
-            else {
-              Write-Host "Skipping missing solution: $sln"
+          $picked = New-Object System.Collections.Generic.List[string]
+
+          foreach ($p in $preferred) {
+            if (Test-Path $p) { $picked.Add($p) }
+          }
+
+          if ($picked.Count -eq 0) {
+            $slnf = Get-ChildItem -Path "src" -Recurse -Filter "*.slnf" -ErrorAction SilentlyContinue |
+              Select-Object -First 6 -ExpandProperty FullName
+            foreach ($f in $slnf) { $picked.Add($f) }
+          }
+
+          if ($picked.Count -eq 0) {
+            $sln = Get-ChildItem -Path "src" -Recurse -Filter "*.sln" -ErrorAction SilentlyContinue |
+              Select-Object -First 6 -ExpandProperty FullName
+            foreach ($f in $sln) { $picked.Add($f) }
+          }
+
+          if ($picked.Count -eq 0) {
+            cmd /c call "$env:GITHUB_WORKSPACE\eng\build.cmd" -noBuildNative -noBuildNodeJS
+          }
+          else {
+            foreach ($s in $picked) {
+              dotnet restore "$s"
+              dotnet build "$s" -c Release --no-restore
             }
           }
 
