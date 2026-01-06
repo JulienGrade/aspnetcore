@@ -49,9 +49,9 @@ jobs:
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory -Force
+          New-Item -Path "${{ runner.temp }}\scanner" -ItemType Directory -Force | Out-Null
           dotnet tool install dotnet-sonarscanner `
-            --tool-path ${{ runner.temp }}\scanner `
+            --tool-path "${{ runner.temp }}\scanner" `
             --add-source "https://api.nuget.org/v3/index.json" `
             --ignore-failed-sources
 
@@ -65,10 +65,26 @@ jobs:
             /o:"juliengrade" `
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.token="$env:SONAR_TOKEN" `
+            /d:sonar.scanner.skipJreProvisioning=true `
             /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" `
             /d:sonar.coverage.exclusions="**/*Tests/**"
 
-          cmd /c call "$env:GITHUB_WORKSPACE\eng\build.cmd" -noBuildNative -noBuildNodeJS
+          $solutions = @(
+            "src\Framework\Framework.sln",
+            "src\Servers\Servers.sln",
+            "src\SignalR\SignalR.sln",
+            "src\Security\Security.sln"
+          )
+
+          foreach ($sln in $solutions) {
+            if (Test-Path $sln) {
+              dotnet restore $sln
+              dotnet build $sln -c Release --no-restore
+            }
+            else {
+              Write-Host "Skipping missing solution: $sln"
+            }
+          }
 
           & "${{ runner.temp }}\scanner\dotnet-sonarscanner" end `
             /d:sonar.token="$env:SONAR_TOKEN"
