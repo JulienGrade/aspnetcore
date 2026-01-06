@@ -25,6 +25,16 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
+      - name: Set up .NET (host)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore aspnetcore toolchain
+        shell: powershell
+        run: |
+          eng\restore.cmd
+
       - name: Cache SonarQube Cloud packages
         uses: actions/cache@v4
         with:
@@ -50,11 +60,6 @@ jobs:
             --add-source "https://api.nuget.org/v3/index.json" `
             --ignore-failed-sources
 
-      - name: Generate ASP.NET Core build files
-        shell: powershell
-        run: |
-          eng\build.cmd -noBuildNative -noBuildManaged
-
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -69,8 +74,7 @@ jobs:
             /d:sonar.exclusions="src/Components/Shared.JS/**/*" `
             /d:sonar.javascript.exclusions="src/Components/Shared.JS/**/*"
 
-          dotnet restore src\Framework\Framework.slnf
-          dotnet build src\Framework\Framework.slnf -c Release --no-restore
+          eng\build.cmd -noBuildNative -noBuildNodeJS
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
             /d:sonar.token="$env:SONAR_TOKEN"
