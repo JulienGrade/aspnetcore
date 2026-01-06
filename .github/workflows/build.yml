@@ -33,7 +33,7 @@ jobs:
 
       - name: Restore aspnetcore toolchain
         shell: cmd
-        run: eng\restore.cmd
+        run: call eng\restore.cmd
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
