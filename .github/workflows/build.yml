@@ -14,7 +14,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
@@ -23,26 +24,25 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu'
+          distribution: zulu
 
-      - name: Set up .NET (host)
+      - name: Set up .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Restore aspnetcore toolchain
-        shell: powershell
-        run: |
-          eng\restore.cmd
+        shell: cmd
+        run: eng\restore.cmd
 
-      - name: Cache SonarQube Cloud packages
+      - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
           path: ~\sonar\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Cache SonarQube Cloud scanner
+      - name: Cache SonarCloud scanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
         with:
@@ -52,7 +52,7 @@ jobs:
 
       - name: Install SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-        shell: powershell
+        shell: pwsh
         run: |
           New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory -Force
           dotnet tool install dotnet-sonarscanner `
@@ -63,18 +63,17 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        shell: powershell
+        shell: pwsh
         run: |
           ${{ runner.temp }}\scanner\dotnet-sonarscanner begin `
             /k:"JulienGrade_aspnetcore" `
             /o:"juliengrade" `
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.token="$env:SONAR_TOKEN" `
-            /d:sonar.python.version="3.11" `
-            /d:sonar.exclusions="src/Components/Shared.JS/**/*" `
-            /d:sonar.javascript.exclusions="src/Components/Shared.JS/**/*"
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" `
+            /d:sonar.coverage.exclusions="**/*Tests/**"
 
-          eng\build.cmd -noBuildNative -noBuildNodeJS
+          cmd /c eng\build.cmd -noBuildNative -noBuildNodeJS
 
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
             /d:sonar.token="$env:SONAR_TOKEN"
